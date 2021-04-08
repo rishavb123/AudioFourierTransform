@@ -1,11 +1,11 @@
 <html>
 <script language="javascript">
 function RefreshImage(){
-document.pic0.src="stream.png?a=" + String(Math.random()*99999999);
-setTimeout('RefreshImage()',50);
+document.pic0.src="./stream/backup.png?a=" + String(Math.random()*99999999);
+setTimeout('RefreshImage()', 100);
 }
 </script>
 <body onload="RefreshImage()">
-<img width="300" name="pic0" src="stream.png">
+<img width="900" name="pic0" src="./stream/backup.png">
 </body>
 </html>

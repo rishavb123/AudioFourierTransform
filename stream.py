@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as pyplot
 import time
+import shutil
 
 matplotlib.use('Agg')
 
@@ -11,6 +12,7 @@ UPDATES_PER_SECOND = 20 # the number times to output from the stream per second
 RUNTIME = 60 # the number of seconds to run the program
 
 CHUNK = int(RATE / UPDATES_PER_SECOND)  # RATE / number of updates per second
+first = True
 
 def process(data):
     data = data * np.hanning(len(data)) # Applying hanning smoothing
@@ -22,24 +24,32 @@ def process(data):
     freq = freq[:int(len(freq) / 2)] # keep only first half again since these are corresponding to the fft
     freqPeak = freq[np.where(fft == np.max(fft))[0][0]] + 1
 
+    # pass a threshold filter over the data
     THRESHOLD = 10000
     fft[fft < THRESHOLD] = 0
 
     return fft, { "peak": freqPeak }
 
 def soundplot(stream):
+    global first
     start_time = time.time() # Start time
 
     # Read and process data
     data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
     data, payload = process(data)
 
+    # Backup old image to backup
+    if first:
+        first = False
+    else:
+        shutil.move("stream/realtime.png", "stream/backup.png")
+
     # Plot data and stream to website through file
     pyplot.plot(data)
     pyplot.title(i + 1)
     pyplot.grid()
     pyplot.axis([0, len(data), -(2 ** 16) / 2, 2 ** 16 / 2])
-    pyplot.savefig("stream.png", dpi=50)
+    pyplot.savefig("stream/realtime.png", dpi=50)
     pyplot.close("all")
 
     elapsed = int((time.time() - start_time) * 1000) # calculate elapsed time
@@ -63,3 +73,4 @@ if __name__ == "__main__":
     stream.stop_stream()
     stream.close()
     p.terminate()
+    shutil.move("stream/realtime.png", "stream/backup.png")
