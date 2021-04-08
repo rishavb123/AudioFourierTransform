@@ -1,28 +1,58 @@
 import pyaudio
 import numpy as np
-import matplotlib.pyplot as pylab
+import matplotlib
+import matplotlib.pyplot as pyplot
 import time
 
-RATE = 44100
-CHUNK = int(RATE/20) # RATE / number of updates per second
+matplotlib.use('Agg')
+
+RATE = 44100  # time resolution of the recording device (Hz), the sample frequency
+UPDATES_PER_SECOND = 20 # the number times to output from the stream per second 
+RUNTIME = 60 # the number of seconds to run the program
+
+CHUNK = int(RATE / UPDATES_PER_SECOND)  # RATE / number of updates per second
+
+def process(data):
+    data = data * np.hanning(len(data)) # Applying hanning smoothing
+    fft = np.abs(np.fft.fft(data))
+    fft = fft[: int(len(fft) / 2)] # only keep first half since it mirror the second half
+    freq = np.fft.fftfreq(CHUNK, 1.0 / RATE)
+    freq = freq[:, int(len(freq) / 2)] # keep only first half again
+    
+    return fft
 
 def soundplot(stream):
-    t1=time.time()
-    data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
-    pylab.plot(data)
-    pylab.title(i)
-    pylab.grid()
-    pylab.axis([0,len(data),-2**16/2,2**16/2])
-    pylab.savefig("stream.png",dpi=50)
-    pylab.close('all')
-    print("took %.02f ms"%((time.time()-t1)*1000))
+    start_time = time.time() # Start time
 
-if __name__=="__main__":
-    p=pyaudio.PyAudio()
-    stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
-                  frames_per_buffer=CHUNK)
-    for i in range(int(20*RATE/CHUNK)): #do this for 10 seconds
-        soundplot(stream)
+    # Read and process data
+    data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
+    data = process(data)
+
+    # Plot data and stream to website through file
+    pyplot.plot(data)
+    pyplot.title(i)
+    pyplot.grid()
+    pyplot.axis([0, len(data), -(2 ** 16) / 2, 2 ** 16 / 2])
+    pyplot.savefig("stream.png", dpi=50)
+    pyplot.close("all")
+
+    print("took %.02f ms" % ((time.time() - start_time) * 1000), " " * 10, end="\r") # print elapsed time
+
+
+if __name__ == "__main__":
+    p = pyaudio.PyAudio() # Initializes the PyAudio class
+    stream = p.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=RATE,
+        input=True,
+        frames_per_buffer=CHUNK,
+        input_device_index=3,
+    ) # Sets up the stream
+    for i in range(RUNTIME * UPDATES_PER_SECOND):  # Loop for RUNTIME seconds
+        soundplot(stream) # call to the plot function
+
+    # Close stream
     stream.stop_stream()
     stream.close()
     p.terminate()
