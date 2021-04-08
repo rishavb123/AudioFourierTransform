@@ -16,7 +16,7 @@ CHUNK = int(RATE / UPDATES_PER_SECOND)  # RATE / number of updates per second
 first = True
 
 def process0(data):
-    return data
+    return data, { "peak": 0 }
 
 def process1(data):
     data = data * np.hanning(len(data)) # Applying hanning smoothing
