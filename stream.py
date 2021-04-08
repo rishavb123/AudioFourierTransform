@@ -36,7 +36,7 @@ def soundplot(stream):
 
     # Plot data and stream to website through file
     pyplot.plot(data)
-    pyplot.title(i)
+    pyplot.title(i + 1)
     pyplot.grid()
     pyplot.axis([0, len(data), -(2 ** 16) / 2, 2 ** 16 / 2])
     pyplot.savefig("stream.png", dpi=50)
