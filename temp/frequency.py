@@ -8,11 +8,11 @@ TARGET = 2100 # show only this one frequency
 
 p=pyaudio.PyAudio() # start the PyAudio class
 stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
-              frames_per_buffer=CHUNK) #uses default input device
+              frames_per_buffer=CHUNK, input_device_index=3) #uses default input device
 
 # create a numpy array holding a single read of audio data
 for i in range(10): #to it a few times just to see
-    data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
+    data = np.frombuffer(stream.read(CHUNK),dtype=np.int16)
     fft = abs(np.fft.fft(data).real)
     fft = fft[:int(len(fft)/2)] # keep only first half
     freq = np.fft.fftfreq(CHUNK,1.0/RATE)
