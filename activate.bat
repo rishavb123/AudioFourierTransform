@@ -1,1 +1,1 @@
-conda activate audio_env
+@conda activate audio_env
