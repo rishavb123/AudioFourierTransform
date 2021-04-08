@@ -14,19 +14,25 @@ CHUNK = int(RATE / UPDATES_PER_SECOND)  # RATE / number of updates per second
 
 def process(data):
     data = data * np.hanning(len(data)) # Applying hanning smoothing
+
     fft = np.abs(np.fft.fft(data))
     fft = fft[: int(len(fft) / 2)] # only keep first half since it mirror the second half
-    freq = np.fft.fftfreq(CHUNK, 1.0 / RATE)
-    freq = freq[:, int(len(freq) / 2)] # keep only first half again
-    
-    return fft
+
+    freq = np.fft.fftfreq(CHUNK, 1.0 / RATE) # creates an array of frequencies corresponding to the fft
+    freq = freq[:int(len(freq) / 2)] # keep only first half again since these are corresponding to the fft
+    freqPeak = freq[np.where(fft == np.max(fft))[0][0]] + 1
+
+    THRESHOLD = 10000
+    fft[fft < THRESHOLD] = 0
+
+    return fft, { "peak": freqPeak }
 
 def soundplot(stream):
     start_time = time.time() # Start time
 
     # Read and process data
     data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
-    data = process(data)
+    data, payload = process(data)
 
     # Plot data and stream to website through file
     pyplot.plot(data)
@@ -36,7 +42,8 @@ def soundplot(stream):
     pyplot.savefig("stream.png", dpi=50)
     pyplot.close("all")
 
-    print("took %.02f ms" % ((time.time() - start_time) * 1000), " " * 10, end="\r") # print elapsed time
+    elapsed = int((time.time() - start_time) * 1000) # calculate elapsed time
+    print(f"Max frequency: {payload['peak']}\t Time Elapsed: {elapsed}ms", " " * 10, end="\r") # print additional data
 
 
 if __name__ == "__main__":
