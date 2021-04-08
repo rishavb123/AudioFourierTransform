@@ -10,11 +10,15 @@ matplotlib.use('Agg')
 RATE = 44100  # time resolution of the recording device (Hz), the sample frequency
 UPDATES_PER_SECOND = 20 # the number times to output from the stream per second 
 RUNTIME = 60 # the number of seconds to run the program
+process_num = 0
 
 CHUNK = int(RATE / UPDATES_PER_SECOND)  # RATE / number of updates per second
 first = True
 
-def process(data):
+def process0(data):
+    return data
+
+def process1(data):
     data = data * np.hanning(len(data)) # Applying hanning smoothing
 
     fft = np.abs(np.fft.fft(data))
@@ -29,6 +33,9 @@ def process(data):
     fft[fft < THRESHOLD] = 0
 
     return fft, { "peak": freqPeak }
+
+processing_functions = [process0, process1]
+process = processing_functions[process_num]
 
 def soundplot(stream):
     global first
